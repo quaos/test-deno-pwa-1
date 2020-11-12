@@ -6,7 +6,6 @@
     "allowUnusedLabels": false,
     "alwaysStrict": true,
     "checkJs": false,
-    "disableSizeLimit": false,
     "lib": ["ESNext", "DOM"],
     "jsx": "react",
     "jsxFactory": "React.createElement",
