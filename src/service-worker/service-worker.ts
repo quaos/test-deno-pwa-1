@@ -48,13 +48,13 @@ function getFullCacheName(): string {
 }
 
 function syncCacheVersion(): Promise<boolean> {
-  if (!("caches" in window)) {
+  if (!("caches" in self)) {
     return Promise.resolve(false);
   }
 
   const currentCacheName = getFullCacheName();
 
-  return window.caches.keys()
+  return self.caches.keys()
     .then((cacheNames: string[]) => Promise.all(
       cacheNames
         .filter((cacheName: string) => (cacheName != currentCacheName))
@@ -64,11 +64,11 @@ function syncCacheVersion(): Promise<boolean> {
 }
 
 function cacheAssets(): Promise<boolean> {
-  if (!("caches" in window)) {
+  if (!("caches" in self)) {
     return Promise.resolve(false);
   }
 
-  return window.caches.open(getFullCacheName())
+  return self.caches.open(getFullCacheName())
     .then((cache: any) => {
       return cache.addAll([
         'index.html',
@@ -87,7 +87,7 @@ function getResponse(request: Request): Promise<Response> {
         .then((response) => {
           return saveResponseToCache(request, response)
             .then((success) => {
-              (success) && dispatchCacheUpdated(self.clients, request, response);
+              (success) && dispatchCacheUpdated(Clients, request, response);
               return response
             })
         });
@@ -97,20 +97,20 @@ function getResponse(request: Request): Promise<Response> {
 }
 
 function tryGetResponseFromCache(request: Request): Promise<Response | undefined> {
-  if (!("caches" in window)) {
+  if (!("caches" in self)) {
     return Promise.resolve(undefined);
   }
 
-  return window.caches.open(getFullCacheName())
+  return self.caches.open(getFullCacheName())
     .then((cache: any) => cache.match(request))
 }
 
-function saveResponseToCache(request: Request, response: Response): Promise<bool> {
-  if (!("caches" in window)) {
+function saveResponseToCache(request: Request, response: Response): Promise<boolean> {
+  if (!("caches" in self)) {
     return Promise.resolve(false);
   }
 
-  return window.caches.open(getFullCacheName())
+  return self.caches.open(getFullCacheName())
     .then((cache: any) => cache.put(request, response))
     .then(() => true)
 }

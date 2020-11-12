@@ -30,7 +30,7 @@ const App = (props: any) => {
     <div className="container">
       <p>
         <img src="assets/img/deno-logo.png" style={styles.logo} />
-        <img src="assets/img/react-logo192.png" style={styles.logo} />
+        <img src="assets/img/react-logo192x192.png" style={styles.logo} />
       </p>
       <pre>Loading ...{(loading) ? "" : " OK!"}</pre>
       <p>Open up App.tsx to start working on your app!</p>

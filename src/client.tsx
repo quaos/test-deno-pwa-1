@@ -12,6 +12,11 @@ window.addEventListener("DOMContentLoaded", (evt) => {
   );
 });
 
-serviceWorkerContainer.register({ scriptUrl: "/assets/js/service-worker.js" });
+serviceWorkerContainer.register({
+  scriptUrl: "/assets/js/service-worker.js",
+  onMessage: (evt: any) => {
+    console.log("Got message from service worker:",evt);
+  },
+});
 
 export {};

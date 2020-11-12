@@ -21,16 +21,21 @@ const serviceWorkerContainer = {
 
         navigator.serviceWorker.onmessage = (evt: any) => {
             console.log('Message received from SW ->', evt.data);
-            (config.onMesssage) && config.onMesssage(evt);
-          }
+            config.onMessage(evt);
         };
 
         navigator.serviceWorker
             .register(config.scriptUrl, { scope: "/" })
             .then((registration: any) => {
                 console.log("Service worker registered:", registration);
-                let msg = new HelloMessage { from: "container" };
+                if ((!("controller" in navigator.serviceWorker))
+                    || (!navigator.serviceWorker.controller)) {
+                    console.warn("navigator.serviceWorker.controller not available");
+                    return false;
+                }
+                let msg = <HelloMessage> { from: "container" };
                 navigator.serviceWorker.controller.postMessage(msg);
+                return true;
             })
             .catch((err: Error) => {
                 console.error('Error during service worker registration:', err);
