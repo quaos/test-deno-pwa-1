@@ -4,10 +4,7 @@ Test Deno+React Progressive Web App 1
 
 ## Requirements
 
-* Needs to install [denopack](https://denopack.mod.land/) (workaround for `deno bundle` not bundling React libs properly)
-```shell
-deno run --allow-run --allow-read https://deno.land/x/denopack@0.9.0/install.ts
-```
+* Deno version ^1.5.0
 * Adds `~/.deno/bin` path to your system or user's `PATH` environment variable
 ```shell
 # for *nix and MacOS
