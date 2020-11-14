@@ -1,9 +1,26 @@
+var MessageTypes;
+(function(MessageTypes1) {
+    MessageTypes1["Hello"] = "hello";
+    MessageTypes1["CacheUpdated"] = "cacheUpdated";
+})(MessageTypes || (MessageTypes = {
+}));
+async function createCacheUpdatedMessage(cacheName, request, response) {
+    const reqProps = {
+        method: request.method,
+        url: request.url
+    };
+    return {
+        cacheName,
+        request: reqProps
+    };
+}
 self.addEventListener('install', (evt)=>{
     console.log("Hooray, service worker installed!", evt);
     evt.waitUntil(cacheAssets());
 });
 self.addEventListener('activate', (evt)=>{
-    evt.waitUntil(syncCacheVersion());
+    evt.waitUntil(syncCacheVersion().then(()=>self.clients.claim()
+    ));
 });
 self.addEventListener('fetch', (evt)=>{
     evt.respondWith(getResponse(evt.request));
@@ -12,12 +29,12 @@ self.addEventListener('message', (evt)=>{
     let knownEvent = false;
     if ("messageType" in evt.data) {
         switch(evt.data.messageType){
-            case "hello":
-                console.log("Got hello event from:", evt.data.from);
+            case MessageTypes.Hello:
+                console.log(`Got ${evt.data.messageType} event from:`, evt.data.from);
                 knownEvent = true;
                 break;
-            case "cacheUpdated":
-                console.log("Got cacheUpdated event:", evt.data);
+            case MessageTypes.CacheUpdated:
+                console.log(`Got ${evt.data.messageType} event:`, evt.data);
                 knownEvent = true;
                 break;
             default: break;
@@ -26,6 +43,9 @@ self.addEventListener('message', (evt)=>{
     if (!knownEvent) {
         console.log("Got message event:", evt);
     }
+});
+self.addEventListener('push', (evt)=>{
+    console.log("Push notification received:", evt);
 });
 function getFullCacheName() {
     return `${"test-deno-pwa-1"}-v${"1"}`;
@@ -45,21 +65,26 @@ function cacheAssets() {
     if (!("caches" in self)) {
         return Promise.resolve(false);
     }
+    console.log("Precaching app assets");
     return self.caches.open(getFullCacheName()).then((cache)=>{
         return cache.addAll([
-            'index.html',
-            'assets/css/styles.css',
-            'assets/js/offline.js',
-            'assets/img/', 
+            '/',
+            '/index.html',
+            '/assets/css/styles.css',
+            '/assets/img/deno-logo.png',
+            '/assets/img/react-logo192x192.png', 
         ]);
     }).then(()=>true
-    );
+    ).catch((err)=>{
+        console.error(err);
+        return false;
+    });
 }
 function getResponse(request) {
     return tryGetResponseFromCache(request).then((cachedResponse)=>{
         let liveResponse = fetch(request).then((response)=>{
             return saveResponseToCache(request, response).then((success)=>{
-                success && dispatchCacheUpdated(Clients, request, response);
+                success && dispatchCacheUpdated(self.clients, request, response);
                 return response;
             });
         });
@@ -77,18 +102,16 @@ function saveResponseToCache(request, response) {
     if (!("caches" in self)) {
         return Promise.resolve(false);
     }
+    console.log("Saving response to cache:", response);
     return self.caches.open(getFullCacheName()).then((cache)=>cache.put(request, response)
     ).then(()=>true
     );
 }
 function dispatchCacheUpdated(clients, request, response) {
-    let msg = {
-        request,
-        response
-    };
-    return clients.matchAll().then((matchedClients)=>{
-        matchedClients.forEach((client)=>postMessage(msg)
-        );
-        return response;
-    });
+    return createCacheUpdatedMessage(getFullCacheName(), request, response).then((msg)=>clients.matchAll().then((matchedClients)=>{
+            matchedClients.forEach((client)=>client.postMessage(msg)
+            );
+            return response;
+        })
+    );
 }

@@ -1,22 +1,14 @@
-import { React, ReactDOM } from "./deps/react.ts";
+import { React } from "./deps/react.ts";
+import { ReactDOM } from "./deps/react-dom.ts";
 
 import App from "./components/App.tsx";
-import { CacheUpdatedMessage } from "./service-worker/messages.ts";
-import serviceWorkerContainer from './service-worker/container.ts';
 
 window.addEventListener("DOMContentLoaded", (evt) => {
-  (ReactDOM as any).render(
+  ReactDOM.render(
     <App />,
     // @ts-ignore
     document.getElementById("root"),
   );
-});
-
-serviceWorkerContainer.register({
-  scriptUrl: "/assets/js/service-worker.js",
-  onMessage: (evt: any) => {
-    console.log("Got message from service worker:",evt);
-  },
 });
 
 export {};

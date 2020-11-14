@@ -1,12 +1,10 @@
-// @deno-types="https://raw.githubusercontent.com/Soremwar/deno_types/master/react/v16.13.1/react.d.ts"
-// @ts-ignore
-export { React } from "https://cdn.skypack.dev/react@16.13.1";
-//export { default as React } from "https://dev.jspm.io/react@16.13.1";
+export { default as React } from "https://esm.sh/[react,react-dom]/react?dev&no-check";
 
-// @deno-types="https://raw.githubusercontent.com/Soremwar/deno_types/master/react-dom/v16.13.1/react-dom.d.ts"
-// @ts-ignore
-export { ReactDOM } from 'https://cdn.skypack.dev/react-dom@16.13.1';
-//export { default as ReactDOM } from "https://dev.jspm.io/react-dom@16.13.1";
+//HACK: Fix missing React.FC
+import { default as _React } from "https://esm.sh/[react,react-dom]/react?dev&no-check";
+export type ReactFC<T> = (props: _React.PropsWithChildren<T>) => _React.Element;
+
+//export const React = _React;
 
 declare global {
   namespace JSX {

@@ -1,4 +1,12 @@
-import { CacheUpdatedMessage } from "./messages.ts";
+import { 
+  CacheUpdatedMessage,
+  createCacheUpdatedMessage,
+  MessageTypes,
+  ServiceWorkerMessage,
+} from "./messages.ts";
+
+//HACK
+declare var self: ServiceWorkerGlobalScope;
 
 const APP_CACHE_NAME = "test-deno-pwa-1";
 const APP_CACHE_VERSION = "1";
@@ -13,6 +21,7 @@ self.addEventListener('install', (evt: any) => {
 self.addEventListener('activate', (evt: any) => {
   evt.waitUntil(
     syncCacheVersion()
+      .then(() => self.clients.claim())
   );
 });
 
@@ -22,16 +31,16 @@ self.addEventListener('fetch', (evt: any) => {
   )
 });
 
-self.addEventListener('message', (evt: MessageEvent<any>) => {
+self.addEventListener('message', (evt: any) => {
   let knownEvent = false;
   if ("messageType" in evt.data) {
     switch (evt.data.messageType) {
-      case "hello":
-        console.log("Got hello event from:", evt.data.from);
+      case MessageTypes.Hello:
+        console.log(`Got ${evt.data.messageType} event from:`, evt.data.from);
         knownEvent = true;
         break;
-      case "cacheUpdated":
-        console.log("Got cacheUpdated event:", evt.data);
+      case MessageTypes.CacheUpdated:
+        console.log(`Got ${evt.data.messageType} event:`, evt.data);
         knownEvent = true;
         break;
       default:
@@ -41,6 +50,10 @@ self.addEventListener('message', (evt: MessageEvent<any>) => {
   if (!knownEvent) {
     console.log("Got message event:", evt);
   }
+});
+
+self.addEventListener('push', (evt: any) => {
+  console.log("Push notification received:", evt);
 });
 
 function getFullCacheName(): string {
@@ -68,16 +81,23 @@ function cacheAssets(): Promise<boolean> {
     return Promise.resolve(false);
   }
 
+  console.log("Precaching app assets");
+
   return self.caches.open(getFullCacheName())
     .then((cache: any) => {
       return cache.addAll([
-        'index.html',
-        'assets/css/styles.css',
-        'assets/js/offline.js',
-        'assets/img/',
+        '/',
+        '/index.html',
+        '/assets/css/styles.css',
+        '/assets/img/deno-logo.png',
+        '/assets/img/react-logo192x192.png',
       ]);
     })
     .then(() => true)
+    .catch((err: Error) => {
+      console.error(err);
+      return false
+    })
 }
 
 function getResponse(request: Request): Promise<Response> {
@@ -87,7 +107,7 @@ function getResponse(request: Request): Promise<Response> {
         .then((response) => {
           return saveResponseToCache(request, response)
             .then((success) => {
-              (success) && dispatchCacheUpdated(Clients, request, response);
+              (success) && dispatchCacheUpdated(self.clients, request, response);
               return response
             })
         });
@@ -110,17 +130,19 @@ function saveResponseToCache(request: Request, response: Response): Promise<bool
     return Promise.resolve(false);
   }
 
+  console.log("Saving response to cache:", response);
+
   return self.caches.open(getFullCacheName())
     .then((cache: any) => cache.put(request, response))
     .then(() => true)
 }
 
 function dispatchCacheUpdated(clients: any, request: Request, response: Response): Promise<Response> {
-  let msg = <CacheUpdatedMessage> { request, response };
-
-  return clients.matchAll()
-    .then((matchedClients: any[]) => {
-      matchedClients.forEach((client: any) => postMessage(msg));
-      return response
-    })
+  return createCacheUpdatedMessage(getFullCacheName(), request, response)
+    .then((msg) => clients.matchAll()
+      .then((matchedClients: any[]) => {
+        matchedClients.forEach((client: any) => client.postMessage(msg));
+        return response
+      })
+    );
 }

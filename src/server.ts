@@ -21,6 +21,12 @@ export async function runServer(opts?: RunServerOptions): Promise<number> {
           await next(ctx);
         }
       )
+      .use((next) =>
+        async (ctx) => {
+          ctx.response.headers.set("Service-Worker-Allowed", "/");
+          await next(ctx);
+        }
+      )
       .static("/", sourceDir)
       .file("/", `${sourceDir}/index.html`)
       .start({ port });

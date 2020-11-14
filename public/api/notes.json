@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "title": "Welcome to Progressive Web App!",
+    "description": "Powered by Deno+React"
+  },
+  {
+    "id": 2,
+    "title": "Test Note 1",
+    "description": "Test 1 2 3"
+  }
+]

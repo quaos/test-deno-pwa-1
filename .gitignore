@@ -3,6 +3,11 @@ npm-debug.*
 .vscode/**/*
 !.vscode/settings.json
 
+public/assets/js/client.js
+public/assets/js/client.js.*
+public/assets/js/service-worker.js
+public/assets/js/service-worker.js.*
+
 *.env
 *.SECRET
 

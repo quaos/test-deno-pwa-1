@@ -1,4 +1,8 @@
-import { React } from "../deps/react.ts";
+import { React, ReactFC } from "../deps/react.ts";
+
+import { ServiceWorkerContextProvider } from "../context/service-worker.tsx";
+
+import { NotesList } from "./NotesList.tsx";
 
 const styles = {
   logo: {
@@ -10,7 +14,10 @@ const styles = {
   },
 };
 
-const App = (props: any) => {
+interface AppProps {
+}
+
+const App: ReactFC<AppProps> = ({ }) => {
   let [ loading, setLoading ] = React.useState(true);
 
   React.useEffect(() => {
@@ -27,14 +34,19 @@ const App = (props: any) => {
   }, []);
 
   return (
-    <div className="container">
-      <p>
-        <img src="assets/img/deno-logo.png" style={styles.logo} />
-        <img src="assets/img/react-logo192x192.png" style={styles.logo} />
-      </p>
-      <pre>Loading ...{(loading) ? "" : " OK!"}</pre>
-      <p>Open up App.tsx to start working on your app!</p>
-    </div>
+    <ServiceWorkerContextProvider>
+      <div className="container">
+        <p>
+          <img src="assets/img/deno-logo.png" style={styles.logo} />
+          <img src="assets/img/react-logo192x192.png" style={styles.logo} />
+        </p>
+        
+        {(loading)
+          ? <pre>Loading ...</pre>
+          : <NotesList />
+        }
+      </div>
+    </ServiceWorkerContextProvider>
   );
 };
 

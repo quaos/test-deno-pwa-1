@@ -1,8 +1,11 @@
-import { HelloMessage } from "./messages.ts";
+import { EventEmitter } from "../deps/events.ts";
+
+import { HelloMessage, ServiceWorkerMessage } from "./messages.ts";
+
+/// <reference path="service-worker-api.d.ts" />
 
 export interface ServiceWorkerContainerConfig {
     scriptUrl: string;
-    onMessage: (evt: any) => void;
 }
 
 const serviceWorkerContainer = {
@@ -12,34 +15,40 @@ const serviceWorkerContainer = {
             return;
         }
 
-        navigator.serviceWorker.ready.then(() => {
-            console.log(
-              'This web app is being served cache-first by a service ' +
-                'worker. To learn more, visit https://bit.ly/CRA-PWA',
-            );
-        });
+        const messagesDispatcher = new EventEmitter();
 
         navigator.serviceWorker.onmessage = (evt: any) => {
-            console.log('Message received from SW ->', evt.data);
-            config.onMessage(evt);
+            console.log('Message received from SW:', evt.data);
+            if (!("messageType" in evt.data)) {
+                // Ignore
+                return;
+            }
+            messagesDispatcher.emit(evt.data.messageType, evt.data as ServiceWorkerMessage);
         };
+
+        navigator.serviceWorker.ready.then((registration) => {
+            console.log("Service worker ready:", registration);
+            if ((!("controller" in navigator.serviceWorker))
+                || (!navigator.serviceWorker.controller)) {
+                console.warn("navigator.serviceWorker.controller not available");
+                return true;
+            }
+            let msg = <HelloMessage> { from: "container" };
+            navigator.serviceWorker.controller.postMessage(msg);
+            return true;
+        });
 
         navigator.serviceWorker
             .register(config.scriptUrl, { scope: "/" })
             .then((registration: any) => {
                 console.log("Service worker registered:", registration);
-                if ((!("controller" in navigator.serviceWorker))
-                    || (!navigator.serviceWorker.controller)) {
-                    console.warn("navigator.serviceWorker.controller not available");
-                    return false;
-                }
-                let msg = <HelloMessage> { from: "container" };
-                navigator.serviceWorker.controller.postMessage(msg);
                 return true;
             })
             .catch((err: Error) => {
                 console.error('Error during service worker registration:', err);
             });
+
+        return messagesDispatcher
     },
 
     unregister: () => {

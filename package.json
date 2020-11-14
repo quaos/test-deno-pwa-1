@@ -11,8 +11,10 @@
     "gitlab": "https://gitlab.com/quaos/test-deno-pwa-1"
   },
   "scripts": {
-    "_build_denobundle": "deno bundle --config tsconfig.json src/client.tsx public/assets/js/client.bundle.js",
-    "build": "denopack -c denopack.config.ts",
+    "build": "deno bundle --config tsconfig.json src/client.tsx public/assets/js/client.js && deno bundle --config src/service-worker/tsconfig.json src/service-worker/service-worker.ts public/assets/js/service-worker.js",
+    "build-main": "deno bundle --config tsconfig.json src/client.tsx public/assets/js/client.js",
+    "build-sw": "deno bundle --config src/service-worker/tsconfig.json src/service-worker/service-worker.ts public/assets/js/service-worker.js",
+    "_build_denopack": "denopack -c denopack.config.ts",
     "start": "deno run --allow-env --allow-net --allow-read --allow-run main.ts -- --browse serve",
     "debug": "denon start",
     "cache": "deno cache src/deps/*.ts"
