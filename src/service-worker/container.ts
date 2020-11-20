@@ -12,7 +12,7 @@ const serviceWorkerContainer = {
     register: (config: ServiceWorkerContainerConfig) => {
         if (!('serviceWorker' in navigator)) {
             console.warn("serviceWorker not enabled in navigator:", navigator);
-            return;
+            return undefined;
         }
 
         const messagesDispatcher = new EventEmitter();
@@ -31,11 +31,10 @@ const serviceWorkerContainer = {
             if ((!("controller" in navigator.serviceWorker))
                 || (!navigator.serviceWorker.controller)) {
                 console.warn("navigator.serviceWorker.controller not available");
-                return true;
+                return;
             }
             let msg = <HelloMessage> { from: "container" };
             navigator.serviceWorker.controller.postMessage(msg);
-            return true;
         });
 
         navigator.serviceWorker

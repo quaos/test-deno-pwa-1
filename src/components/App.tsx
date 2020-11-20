@@ -1,6 +1,7 @@
+import { EventEmitter } from "../deps/events.ts";
 import { React, ReactFC } from "../deps/react.ts";
 
-import { ServiceWorkerContextProvider } from "../context/service-worker.tsx";
+import { ServiceWorkerContext } from "../context/service-worker.tsx";
 
 import { NotesList } from "./NotesList.tsx";
 
@@ -15,9 +16,10 @@ const styles = {
 };
 
 interface AppProps {
+  swMessagesDispatcher: EventEmitter;
 }
 
-const App: ReactFC<AppProps> = ({ }) => {
+const App: ReactFC<AppProps> = ({ swMessagesDispatcher }) => {
   let [ loading, setLoading ] = React.useState(true);
 
   React.useEffect(() => {
@@ -34,11 +36,11 @@ const App: ReactFC<AppProps> = ({ }) => {
   }, []);
 
   return (
-    <ServiceWorkerContextProvider>
+    <ServiceWorkerContext.Provider value={{ messagesDispatcher: swMessagesDispatcher }}>
       <div className="container">
         <p>
-          <img src="assets/img/deno-logo.png" style={styles.logo} />
-          <img src="assets/img/react-logo192x192.png" style={styles.logo} />
+          <img src="assets/img/deno-logo-280x280.png" style={styles.logo} />
+          <img src="assets/img/react-logo-192x192.png" style={styles.logo} />
         </p>
         
         {(loading)
@@ -46,7 +48,7 @@ const App: ReactFC<AppProps> = ({ }) => {
           : <NotesList />
         }
       </div>
-    </ServiceWorkerContextProvider>
+    </ServiceWorkerContext.Provider>
   );
 };
 

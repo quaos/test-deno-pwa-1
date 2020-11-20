@@ -10,6 +10,7 @@ declare var self: ServiceWorkerGlobalScope;
 
 const APP_CACHE_NAME = "test-deno-pwa-1";
 const APP_CACHE_VERSION = "1";
+const CACHEABLE_URL_PATTERNS = /^(file|http|https):\/\/(.+)$/i;
 
 self.addEventListener('install', (evt: any) => {
   console.log("Hooray, service worker installed!", evt);
@@ -26,6 +27,11 @@ self.addEventListener('activate', (evt: any) => {
 });
 
 self.addEventListener('fetch', (evt: any) => {
+  // HACK: Workaround for https://bugs.chromium.org/p/chromium/issues/detail?id=823392
+  if (evt.request.cache === 'only-if-cached' && evt.request.mode !== 'same-origin') {
+    return;
+  }
+
   evt.respondWith(
     getResponse(evt.request as Request)
   )
@@ -89,8 +95,8 @@ function cacheAssets(): Promise<boolean> {
         '/',
         '/index.html',
         '/assets/css/styles.css',
-        '/assets/img/deno-logo.png',
-        '/assets/img/react-logo192x192.png',
+        '/assets/img/deno-logo-280x280.png',
+        '/assets/img/react-logo-192x192.png',
       ]);
     })
     .then(() => true)
@@ -105,9 +111,9 @@ function getResponse(request: Request): Promise<Response> {
     .then((cachedResponse?: Response) => {
       let liveResponse = fetch(request)
         .then((response) => {
-          return saveResponseToCache(request, response)
+          return saveResponseToCache(request, response.clone())
             .then((success) => {
-              (success) && dispatchCacheUpdated(self.clients, request, response);
+              (success) && dispatchCacheUpdated(self.clients, request, response.clone());
               return response
             })
         });
@@ -127,6 +133,9 @@ function tryGetResponseFromCache(request: Request): Promise<Response | undefined
 
 function saveResponseToCache(request: Request, response: Response): Promise<boolean> {
   if (!("caches" in self)) {
+    return Promise.resolve(false);
+  }
+  if (!CACHEABLE_URL_PATTERNS.test(request.url)) {
     return Promise.resolve(false);
   }
 

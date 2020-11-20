@@ -10,6 +10,9 @@ export async function runServer(opts?: RunServerOptions): Promise<number> {
     const sourceDir = "./public";
     const host = opts?.host || "localhost";
     const port = opts?.port || 8080;
+
+    abc.MIME.DB[".css"] = "text/css";
+
     console.log(
       `Starting static web server at: http://${host}:${port}/\nSource path: ${sourceDir}`,
     );
